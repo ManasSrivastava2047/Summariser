@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Hero Section -->
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold text-primary mb-3">
+                    Transform Your Content into Insights
+                </h2>
+                <p class="lead text-muted">
+                    Upload documents or paste text to get AI-powered summaries with audio explanations
+                </p>
+            </div>
+
+            <!-- Error Alert -->
+            {% if error %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <!-- Main Form Card -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Submit Your Content
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('submit') }}" enctype="multipart/form-data" id="summarizerForm">
+                        
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs mb-4" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-input" type="button" role="tab">
+                                    <i class="fas fa-keyboard me-2"></i>Text Input
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-input" type="button" role="tab">
+                                    <i class="fas fa-file-upload me-2"></i>File Upload
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="inputTabsContent">
+                            <!-- Text Input Tab -->
+                            <div class="tab-pane fade show active" id="text-input" role="tabpanel">
+                                <div class="mb-4">
+                                    <label for="text_input" class="form-label fw-bold">
+                                        <i class="fas fa-edit me-2"></i>Enter Your Text
+                                    </label>
+                                    <textarea 
+                                        class="form-control" 
+                                        id="text_input" 
+                                        name="text_input" 
+                                        rows="8" 
+                                        placeholder="Paste your content here... (articles, documents, research papers, etc.)"
+                                    ></textarea>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Minimum 50 characters recommended for better summaries
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- File Upload Tab -->
+                            <div class="tab-pane fade" id="file-input" role="tabpanel">
+                                <div class="mb-4">
+                                    <label for="file_upload" class="form-label fw-bold">
+                                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload Document
+                                    </label>
+                                    <input 
+                                        class="form-control" 
+                                        type="file" 
+                                        id="file_upload" 
+                                        name="file_upload" 
+                                        accept=".txt,.pdf,.docx"
+                                    >
+                                    <div class="form-text">
+                                        <i class="fas fa-file-alt me-1"></i>
+                                        Supported formats: TXT, PDF, DOCX (Max 10MB)
+                                    </div>
+                                </div>
+
+                                <!-- File Preview Area -->
+                                <div id="filePreview" class="d-none">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-file me-2"></i>
+                                        <span id="fileName"></span>
+                                        <button type="button" class="btn-close float-end" onclick="clearFile()"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-magic me-2"></i>
+                                Generate Summary
+                                <span class="spinner-border spinner-border-sm ms-2 d-none" id="loadingSpinner"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="row mt-5">
+                <div class="col-md-4 text-center mb-4">
+                    <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-3">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h5>AI-Powered</h5>
+                    <p class="text-muted">Advanced AI technology for accurate and meaningful summaries</p>
+                </div>
+                <div class="col-md-4 text-center mb-4">
+                    <div class="feature-icon bg-success text-white rounded-circle mx-auto mb-3">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <h5>Audio Explanation</h5>
+                    <p class="text-muted">Listen to your summaries with natural text-to-speech</p>
+                </div>
+                <div class="col-md-4 text-center mb-4">
+                    <div class="feature-icon bg-info text-white rounded-circle mx-auto mb-3">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h5>Multiple Formats</h5>
+                    <p class="text-muted">Support for text, PDF, and Word documents</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // File upload preview
+    document.getElementById('file_upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        
+        if (file) {
+            fileName.textContent = file.name;
+            preview.classList.remove('d-none');
+        } else {
+            preview.classList.add('d-none');
+        }
+    });
+
+    function clearFile() {
+        document.getElementById('file_upload').value = '';
+        document.getElementById('filePreview').classList.add('d-none');
+    }
+
+    // Form submission with loading state
+    document.getElementById('summarizerForm').addEventListener('submit', function() {
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('loadingSpinner');
+        
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        submitBtn.innerHTML = '<i class="fas fa-magic me-2"></i>Processing...<span class="spinner-border spinner-border-sm ms-2"></span>';
+    });
+</script>
+{% endblock %}

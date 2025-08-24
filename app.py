@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import google.generativeai as genai
 import os
+from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 import PyPDF2
 import docx
@@ -8,11 +9,16 @@ from gtts import gTTS
 import tempfile
 import base64
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Change this to a secure secret key
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-here')
 
 # Configure Gemini API
-genai.configure(api_key=os.getenv('GEMINI_API_KEY', 'your-gemini-api-key-here'))
+api_key = os.getenv('GEMINI_API_KEY')
+if not api_key:
+    raise ValueError("GEMINI_API_KEY environment variable is required")
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-pro')
 
 # Upload configuration
@@ -55,9 +61,9 @@ def generate_summary(text):
     """Generate summary using Gemini API"""
     try:
         prompt = f"""
-        You are an avatar that provides summarised versions of long texts to the user.Provide the summary thats understandable but also doesnot 
-        miss out the details in any sense.Keep its length relative to the text for example if its 500 words para try to complete it in 100-150 words
-        and same for relevant file size.The text is given to you  as :
+        You are an avatar that provides summarised versions of long texts to the user. Provide the summary that's understandable but also doesn't 
+        miss out the details in any sense. Keep its length relative to the text for example if it's 500 words para try to complete it in 100-150 words
+        and same for relevant file size. The text is given to you as:
         
         {text}
         """

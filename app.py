@@ -19,7 +19,7 @@ api_key = os.getenv('GEMINI_API_KEY')
 if not api_key:
     raise ValueError("GEMINI_API_KEY environment variable is required")
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Upload configuration
 UPLOAD_FOLDER = 'uploads'
@@ -76,11 +76,13 @@ def generate_summary(text):
 def generate_audio(text):
     """Generate audio from text using gTTS"""
     try:
+        print(f"[DEBUG] Generating audio for text length: {len(text)}")
         tts = gTTS(text=text, lang='en', slow=False)
         
         # Create temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
             tts.save(tmp_file.name)
+            print(f"[DEBUG] Audio saved to temporary file: {tmp_file.name}")
             
             # Read the file and encode as base64
             with open(tmp_file.name, 'rb') as audio_file:
@@ -89,9 +91,12 @@ def generate_audio(text):
             # Clean up temporary file
             os.unlink(tmp_file.name)
             
+            print(f"[DEBUG] Audio generated successfully, base64 length: {len(audio_data)}")
             return audio_data
     except Exception as e:
-        print(f"Error generating audio: {str(e)}")
+        print(f"[ERROR] Error generating audio: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
 
 @app.route('/')
@@ -130,7 +135,13 @@ def submit():
     summary = generate_summary(content)
     
     # Generate audio
+    print(f"[DEBUG] Starting audio generation for summary length: {len(summary)}")
     audio_data = generate_audio(summary)
+    
+    if audio_data:
+        print("[DEBUG] Audio generation successful")
+    else:
+        print("[DEBUG] Audio generation failed")
     
     # Store in session
     session['summary'] = summary
